@@ -42,6 +42,10 @@ parser.add_argument(
     "--batch_size", type=int, help="Batch Size.", required=True
 )
 
+parser.add_argument(
+    "--output_size", type=int, help="Number of classes.", required=True
+)
+
 args = parser.parse_args()
 
 # Dataset definition
@@ -107,7 +111,7 @@ activation=nn.LeakyReLU(negative_slope=0.1)
 
 model = Classifier(voxel_dimension=voxel_dimension, 
                      mlp_layers=mlp_layers, 
-                     activation=activation, num_classes=20).to(device)
+                     activation=activation, num_classes=args.output_size).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, 0.5)
 

@@ -44,6 +44,9 @@ parser.add_argument(
 parser.add_argument(
     "--finger_type", type=int, help="0:left or 1:right", required=True
 )
+parser.add_argument(
+    "--output_size", type=int, help="Number of classes.", required=True
+)
 
 args = parser.parse_args()
 
@@ -82,9 +85,6 @@ def _save_model(epoch, loss):
     )
     torch.save(net.state_dict(), checkpoint_path)
 
-
-
-
 class FLAGS():
     def __init__(self):
         self.batch_size = args.batch_size
@@ -114,7 +114,7 @@ activation=nn.LeakyReLU(negative_slope=0.1)
 
 model = Classifier(voxel_dimension=voxel_dimension, 
                      mlp_layers=mlp_layers, 
-                     activation=activation, num_classes=20).to(device)
+                     activation=activation, num_classes=args.output_size).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, 0.5)
 

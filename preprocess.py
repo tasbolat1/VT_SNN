@@ -327,32 +327,35 @@ class ViTacData:
 # batch2
 #if args.slip == 0:
 list_of_objects2 = [
+    "110-a_coffee_can",
     "110-b_coffee_can",
     "110-c_coffee_can",
     "110-d_coffee_can",
+    "110-e_coffee_can",
+    "109-c_soymilk",
 ]
-#     list_of_objects2 = [
-#         "107-a_pepsi_bottle",
-#         "107-b_pepsi_bottle",
-#         "107-c_pepsi_bottle",
-#         "107-d_pepsi_bottle",
-#         "107-e_pepsi_bottle",
-#         "108-a_tuna_fish_can",
-#         "108-b_tuna_fish_can",
-#         "108-c_tuna_fish_can",
-#         "108-d_tuna_fish_can",
-#         "108-e_tuna_fish_can",
-#         "109-a_soymilk",
-#         "109-b_soymilk",
-#         "109-c_soymilk",
-#         "109-d_soymilk",
-#         "109-e_soymilk",
-#         "110-a_coffee_can",
-#         "110-b_coffee_can",
-#         "110-c_coffee_can",
-#         "110-d_coffee_can",
-#         "110-e_coffee_can",
-#     ]
+# list_of_objects2 = [
+#     "107-a_pepsi_bottle",
+#     "107-b_pepsi_bottle",
+#     "107-c_pepsi_bottle",
+#     "107-d_pepsi_bottle",
+#     "107-e_pepsi_bottle",
+#     "108-a_tuna_fish_can",
+#     "108-b_tuna_fish_can",
+#     "108-c_tuna_fish_can",
+#     "108-d_tuna_fish_can",
+#     "108-e_tuna_fish_can",
+#     "109-a_soymilk",
+#     "109-b_soymilk",
+#     "109-c_soymilk",
+#     "109-d_soymilk",
+#     "109-e_soymilk",
+#     "110-a_coffee_can",
+#     "110-b_coffee_can",
+#     "110-c_coffee_can",
+#     "110-d_coffee_can",
+#     "110-e_coffee_can",
+# ]
 # elif args.slip == 1:
 #     list_of_objects2 = [
 #         'stable',

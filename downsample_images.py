@@ -74,33 +74,33 @@ torch.save(tact, Path(args.path) / "tact.pt")
 
 del tact
 
-ds_vis_spike_arr = []
-ds_vis_non_spike_arr = []
+# ds_vis_spike_arr = []
+# ds_vis_non_spike_arr = []
 
 
-print('Starting vision ...')
+# print('Starting vision ...')
 
-for i in range(args.count):
+# for i in range(args.count):
    
-    print(f"Processing  {i}...")
-    vis_npy = Path(args.path) / f"{i}_vis.npy"
-    vis = torch.FloatTensor(np.load(vis_npy)).unsqueeze(0)
-    vis = vis.to(device)
+#     print(f"Processing  {i}...")
+#     vis_npy = Path(args.path) / f"{i}_vis.npy"
+#     vis = torch.FloatTensor(np.load(vis_npy)).unsqueeze(0)
+#     vis = vis.to(device)
    
-    with torch.no_grad():
-        vis_pooled_spike = net.forward(vis)
-        vis_pooled_non_spike = net2.forward(vis.permute(0,1,4,2,3))
+#     with torch.no_grad():
+#         vis_pooled_spike = net.forward(vis)
+#         vis_pooled_non_spike = net2.forward(vis.permute(0,1,4,2,3))
         
-    ds_vis_spike_arr.append(vis_pooled_spike.detach().cpu().squeeze(0))
-    ds_vis_non_spike_arr.append(vis_pooled_non_spike.squeeze(0).permute(0,2,3,1).detach().cpu())
+#     ds_vis_spike_arr.append(vis_pooled_spike.detach().cpu().squeeze(0))
+#     ds_vis_non_spike_arr.append(vis_pooled_non_spike.squeeze(0).permute(0,2,3,1).detach().cpu())
 
-ds_vis_spike = torch.stack(ds_vis_spike_arr)
-print(f"ds_vis: {ds_vis_spike.shape}")
-torch.save(ds_vis_spike, Path(args.path) / "ds_vis.pt")
-del ds_vis_spike, ds_vis_spike_arr
+# ds_vis_spike = torch.stack(ds_vis_spike_arr)
+# print(f"ds_vis: {ds_vis_spike.shape}")
+# torch.save(ds_vis_spike, Path(args.path) / "ds_vis.pt")
+# del ds_vis_spike, ds_vis_spike_arr
 
-ds_vis_non_spike = torch.stack(ds_vis_non_spike_arr)
-print(f"ds_vis_non_spike: {ds_vis_non_spike.shape}")
-torch.save(ds_vis_non_spike, Path(args.path) / "ds_vis_non_spike.pt")
+# ds_vis_non_spike = torch.stack(ds_vis_non_spike_arr)
+# print(f"ds_vis_non_spike: {ds_vis_non_spike.shape}")
+# torch.save(ds_vis_non_spike, Path(args.path) / "ds_vis_non_spike.pt")
 
-print("DONE")
+# print("DONE")

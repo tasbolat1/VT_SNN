@@ -2,4 +2,5 @@
 *.envrc
 /utility_files/pepsi_1/*
 /utility_files/soy_3/*
-
+/rpg_event_representation_learning/imgs/*
+/rpg_event_representation_learning/imgs_july30/*
