@@ -24,7 +24,7 @@ class ValueLayer(nn.Module):
 
         # init with trilinear kernel
         path = '/home/tasbolat/some_python_examples/VT_SNN/rpg_event_representation_learning/utils/quantization_layer_init/trilinear_init.pth'
-        #path='' # remove path if want to use their learned kernel
+        path = ''
         #state_dict = torch.load(path)
         #self.load_state_dict(state_dict)
 #         path = join(dirname(__file__), "quantization_layer_init", "trilinear_init.pth")
@@ -33,6 +33,7 @@ class ValueLayer(nn.Module):
             self.load_state_dict(state_dict)
         else:
             self.init_kernel(num_channels)
+
 
     def forward(self, x):
         # create sample of batchsize 1 and input channels 1
@@ -98,6 +99,7 @@ class QuantizationLayer(nn.Module):
         B = int((1+events[-1,-1]).item())
         num_voxels = int(2 * np.prod(self.dim) * B)
         vox = events[0].new_full([num_voxels,], fill_value=0)
+        #print('vox shape:', vox.shape)
         C, H, W = self.dim
 
         # get values for each channel
@@ -114,12 +116,16 @@ class QuantizationLayer(nn.Module):
                           + 0 \
                           + W * H * C * p \
                           + W * H * C * 2 * b
+        
+        #print(idx_before_bins)
 
-        for i_bin in range(C-1):
+        for i_bin in range(C-1): # C
             values = t * self.value_layer.forward(t-i_bin/(C-1))
+            #print(t-i_bin, values.shape)
 
             # draw in voxel grid
             idx = idx_before_bins + W * H * i_bin
+            #print('within batch:', i_bin, idx, values)
             vox.put_(idx.long(), values, accumulate=True)
 
         vox = vox.view(-1, 2, C, H, W)
@@ -127,10 +133,30 @@ class QuantizationLayer(nn.Module):
 
         return vox
 
-
+class SimpleNet(nn.Module):
+    def __init__(self, input_channels, num_classes):
+        super(SimpleNet, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=2*input_channels, out_channels=30, kernel_size=3, stride=1, padding=0, bias=False)
+        self.relu1 = nn.ReLU()
+        self.conv2 = nn.Conv2d(30, 80, 3)
+        self.relu2 = nn.ReLU()
+        self.fc = nn.Linear(1200, 64) # output size for tactile
+    def forward(self, x):
+        conv_lay1 = self.conv1(x)
+        #print(conv_lay1.shape)
+        conv_lay1 = self.relu1(conv_lay1)
+        conv_lay2 = self.conv2(conv_lay1)
+        conv_lay2 = self.relu2(conv_lay2)
+        #print(conv_lay2.shape)
+        conv_lay2 = torch.flatten(conv_lay2, 1)
+        #print(conv_lay2.shape)
+        out_lay = self.fc(conv_lay2)
+        return out_lay
+    
 class Classifier(nn.Module):
     def __init__(self,
-                 voxel_dimension=(9,180,240),  # dimension of voxel will be C x 2 x H x W
+                 voxel_dimensionTac=(5,7,9),  # dimension of voxel will be C x 2 x H x W
+                 voxel_dimensionVis=(9,180,240),
                  crop_dimension=(224, 224),  # dimension of crop before it goes into classifier
                  num_classes=101,
                  mlp_layers=[1, 30, 30, 1],
@@ -138,16 +164,24 @@ class Classifier(nn.Module):
                  pretrained=True):
 
         nn.Module.__init__(self)
-        self.quantization_layer = QuantizationLayer(voxel_dimension, mlp_layers, activation)
-        self.classifier = resnet34(pretrained=pretrained)
-
+        self.quantization_layer1 = QuantizationLayer(voxel_dimensionTac, mlp_layers, activation)
+        self.quantization_layer2 = QuantizationLayer(voxel_dimensionTac, mlp_layers, activation)
+        
         self.crop_dimension = crop_dimension
 
         # replace fc layer and first convolutional layer
-        input_channels = 2*voxel_dimension[0]
-        self.classifier.conv1 = nn.Conv2d(input_channels, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        self.classifier.fc = nn.Linear(self.classifier.fc.in_features, num_classes)
-
+        input_channelsTac = 2*voxel_dimensionTac[0]
+        # simple classifier consisting of conv layers for tactile data
+        self.fTac = SimpleNet(input_channelsTac, num_classes)
+        
+        input_channelsVis = 2*voxel_dimensionVis[0]
+        self.quantization_layerVis = QuantizationLayer(voxel_dimensionVis, mlp_layers, activation)
+        self.fVis = resnet34(pretrained=pretrained)
+        self.fVis.conv1 = nn.Conv2d(input_channelsVis, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.fVis.fc = nn.Linear(self.fVis.fc.in_features, 64) # output for vision
+        
+        self.classifier = nn.Linear(128, num_classes)
+   
     def crop_and_resize_to_resolution(self, x, output_resolution=(224, 224)):
         B, C, H, W = x.shape
         if H > W:
@@ -161,8 +195,21 @@ class Classifier(nn.Module):
 
         return x
 
-    def forward(self, x):
-        vox = self.quantization_layer.forward(x)
-        vox_cropped = self.crop_and_resize_to_resolution(vox, self.crop_dimension)
-        pred = self.classifier.forward(vox_cropped)
-        return pred, vox
+    def forward(self, x1, x2, x3):
+        vox1 = self.quantization_layer1.forward(x1)
+        vox2 = self.quantization_layer2.forward(x2)
+        
+        vox = torch.cat([vox1, vox2], dim=1)
+        outTac = self.fTac.forward(vox)
+  
+        voxVis = self.quantization_layerVis.forward(x3)
+        vox_cropped = self.crop_and_resize_to_resolution(voxVis, self.crop_dimension)
+        outVis = self.fVis.forward(vox_cropped)
+        
+        # classifier
+        merged_vector = torch.cat([outTac, outVis], dim=1)
+        out = self.classifier(merged_vector)
+        
+        return out, vox1, vox2, voxVis
+
+

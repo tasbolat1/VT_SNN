@@ -24,14 +24,15 @@ class ValueLayer(nn.Module):
 
         # init with trilinear kernel
         path = '/home/tasbolat/some_python_examples/VT_SNN/rpg_event_representation_learning/utils/quantization_layer_init/trilinear_init.pth'
-        state_dict = torch.load(path)
-        self.load_state_dict(state_dict)
+        path=''
+        #state_dict = torch.load(path)
+        #self.load_state_dict(state_dict)
 #         path = join(dirname(__file__), "quantization_layer_init", "trilinear_init.pth")
-#         if isfile(path):
-#             state_dict = torch.load(path)
-#             self.load_state_dict(state_dict)
-#         else:
-#             self.init_kernel(num_channels)
+        if isfile(path):
+            state_dict = torch.load(path)
+            self.load_state_dict(state_dict)
+        else:
+            self.init_kernel(num_channels)
 
 
     def forward(self, x):
